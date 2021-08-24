@@ -42,4 +42,51 @@ router.post("/", async (req, res, next) => {
   }
 });
 
+router.get("/initial/:otherUserId", async (req, res, next) => {
+  try {
+    if (!req.user) {
+      return res.sendStatus(401);
+    }
+    const user1 = req.user.id;
+    const user2 = parseInt(Object.values(req.params));
+    
+    const conversation = await Conversation.findConversation(
+      user1,
+      user2
+    )
+
+    const convoMessages = await conversation.getMessages({
+      order: [["createdAt", "DESC"]],
+      limit: 5,
+    });
+
+    const revMessages = convoMessages.reverse()
+    res.json(revMessages)
+  } catch (error) {
+    next(error)
+  }
+});
+
+router.get("/all/:otherUserId", async (req, res, next) => {
+  try {
+    if (!req.user) {
+      return res.sendStatus(401);
+    }
+    const user1 = req.user.id;
+    const user2 = parseInt(Object.values(req.params));
+    
+    const conversation = await Conversation.findConversation(
+      user1,
+      user2
+    )
+    
+    const convoMessages = await conversation.getMessages({
+      order: [["createdAt", "ASC"]]
+    });
+    res.json(convoMessages)
+  } catch (error) {
+    next(error)
+  }
+});
+
 module.exports = router;

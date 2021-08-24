@@ -3,10 +3,11 @@ import socket from "../../socket";
 import {
   gotConversations,
   addConversation,
-  setNewMessage,
+  setNewConvoMessage,
   setSearchedUsers,
   setMarkedMessage,
 } from "../conversations";
+import { gotMessages, setNewMessage } from "../convoMessages"
 import { gotUser, setFetchingStatus } from "../user";
 
 axios.interceptors.request.use(async function (config) {
@@ -79,6 +80,24 @@ export const fetchConversations = () => async (dispatch) => {
   }
 };
 
+export const fetchInitialMessages = (otherUserId) => async (dispatch) => {
+  try {
+    const { data } = await axios.get(`/api/messages/initial/${otherUserId}`);
+    dispatch(gotMessages(data))
+  } catch (error) {
+    console.log(error)
+  }
+};
+
+export const fetchAllMessages = (otherUserId) => async (dispatch) => {
+  try {
+    const { data } = await axios.get(`/api/messages/all/${otherUserId}`);
+    dispatch(gotMessages(data))
+  } catch (error) {
+    console.log(error)
+  }
+};
+
 const saveMessage = async (body) => {
   const { data } = await axios.post("/api/messages", body);
   return data;
@@ -100,6 +119,7 @@ export const postMessage = (body) => async (dispatch) => {
     if (!body.conversationId) {
       dispatch(addConversation(body.recipientId, data.message));
     } else {
+      dispatch(setNewConvoMessage(data.message, data.sender));
       dispatch(setNewMessage(data.message, data.sender));
     }
     sendMessage(data, body);
@@ -110,7 +130,9 @@ export const postMessage = (body) => async (dispatch) => {
 
 export const markMessages = async (conversationId) => {
   try {
-    const { data } = await axios.put(`/api/conversations/seen/${conversationId}`);
+    const { data } = await axios.put(
+      `/api/conversations/seen/${conversationId}`
+    );
     return data[1];
   } catch (error) {
     console.error(error);
@@ -126,13 +148,22 @@ const openMessage = (data) => {
 export const putMarked = (conversation) => async (dispatch) => {
   try {
     const data = await markMessages(conversation.id);
-    let convoMessages = conversation.messages;
-    convoMessages.forEach(async (message) => {
-      if (message.senderId === conversation.otherUser.id && !message.seen) {
-        openMessage(data);
-        dispatch(setMarkedMessage(data));
-      }
-    });
+    let convoMessages = conversation.messages.slice().reverse();
+    convoMessages
+      .slice(
+        0,
+        convoMessages.findIndex(
+          (message) =>
+            message.senderId === conversation.otherUser.id && message.seen
+        )
+      )
+      .forEach(async (message) => {
+        if (message.senderId === conversation.otherUser.id && !message.seen) {
+          openMessage(data);
+          dispatch(setMarkedMessage(data));
+          return true;
+        }
+      });
   } catch (error) {
     console.error(error);
   }

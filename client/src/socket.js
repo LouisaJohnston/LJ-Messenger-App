@@ -1,11 +1,12 @@
 import io from "socket.io-client";
 import store from "./store";
 import {
-  setNewMessage,
+  setNewConvoMessage,
   setMarkedMessage,
   removeOfflineUser,
   addOnlineUser,
 } from "./store/conversations";
+import { setNewMessage } from "./store/convoMessages";
 
 const token = window.localStorage.jwtToken;
 const socket = io.connect(window.location.origin, {
@@ -24,6 +25,7 @@ socket.on("connect", () => {
   });
 
   socket.on("new-message", (data) => {
+    store.dispatch(setNewConvoMessage(data.message, data.sender));
     store.dispatch(setNewMessage(data.message, data.sender));
   });
 

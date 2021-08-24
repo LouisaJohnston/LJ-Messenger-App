@@ -3,14 +3,14 @@ import {
   addOnlineUserToStore,
   addSearchedUsersToStore,
   removeOfflineUserFromStore,
-  addMessageToStore,
+  addMessageToConvoStore,
   addMarkedToStore,
 } from "./utils/reducerFunctions";
 
 // ACTIONS
 
 const GET_CONVERSATIONS = "GET_CONVERSATIONS";
-const SET_MESSAGE = "SET_MESSAGE";
+const SET_CONVO_MESSAGE = "SET_CONVO_MESSAGE";
 const ADD_ONLINE_USER = "ADD_ONLINE_USER";
 const REMOVE_OFFLINE_USER = "REMOVE_OFFLINE_USER";
 const SET_SEARCHED_USERS = "SET_SEARCHED_USERS";
@@ -27,9 +27,9 @@ export const gotConversations = (conversations) => {
   };
 };
 
-export const setNewMessage = (message, sender) => {
+export const setNewConvoMessage = (message, sender) => {
   return {
-    type: SET_MESSAGE,
+    type: SET_CONVO_MESSAGE,
     payload: { message, sender: sender || null },
   };
 };
@@ -82,8 +82,8 @@ const reducer = (state = [], action) => {
   switch (action.type) {
     case GET_CONVERSATIONS:
       return action.conversations;
-    case SET_MESSAGE:
-      return addMessageToStore(state, action.payload);
+    case SET_CONVO_MESSAGE:
+      return addMessageToConvoStore(state, action.payload);
     case SET_MARKED_MESSAGE:
       return addMarkedToStore(state, action.message);
     case ADD_ONLINE_USER: {
